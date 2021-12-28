@@ -1,5 +1,7 @@
 from django.contrib.auth.backends import ModelBackend
 from django.db.models import Q
+from rest_framework_jwt.settings import api_settings
+from rest_framework_jwt.utils import jwt_payload_handler as payload_handler
 
 from renranapi.apps.users.models import User
 
@@ -38,3 +40,32 @@ class CustomAuthBackend(ModelBackend):
             return user
         else:
             return None
+
+
+def jwt_payload_handler(user):
+    """
+    自定义载荷信息
+    :params user  用户模型实例对象
+    """
+    # 先让jwt模块生成自己的载荷信息
+    payload = payload_handler(user)
+    # 追加自己要返回的内容
+    if hasattr(user, 'avatar'):
+        payload['avatar'] = user.avatar.url if user.avatar else ""
+    if hasattr(user, 'nickname'):
+        payload['nickname'] = user.nickname
+
+    return payload
+
+
+def generate_jwt_token(user):
+    """
+    生成jwt token
+    :param user: 用户对象
+    :return: jwt token
+    """
+    jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+    jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+    payload = jwt_payload_handler(user)
+    token = jwt_encode_handler(payload)
+    return token
