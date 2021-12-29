@@ -12,7 +12,7 @@ from rest_framework_jwt.views import ObtainJSONWebToken
 from renranapi.utils.tencentcloudapi import TencentCloudAPI, TencentCloudSDKException
 from users.models import User
 from users.serializers import UserRegisterModelSerializer
-from .tasks import send_sms
+from .task import send_sms
 
 logger = logging.getLogger('django')
 
