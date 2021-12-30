@@ -1,8 +1,11 @@
 import logging
 import random
+import re
 
 from django.conf import settings
+from django.core.mail import send_mail
 from django_redis import get_redis_connection
+from itsdangerous import TimedJSONWebSignatureSerializer, BadData
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
@@ -105,3 +108,74 @@ class SMSAPIView(APIView):
         pipe.execute()
 
         return Response({"errmsg": "OK"}, status=status.HTTP_200_OK)
+
+
+class FindPasswordAPIView(APIView):
+    """
+    拼接url，发送邮件点击url重置密码
+    """
+
+    def get(self, request):
+        # 邮箱校验
+        email = request.query_params.get("email")
+        if not re.match("^\w+@\w+\.\w+$", email):
+            return Response({"detail": "邮箱格式不正确"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "邮箱没有注册，请重新确认！"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 数据加密
+        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, expires_in=settings.EMAIL_EXPIRE_TIME)
+        token = serializer.dumps({"email": email}).decode()
+        url = settings.CLIENT_HOST + f"/reset_password?token={token}"
+
+        # 发送邮件
+        send_mail(subject="【荏苒】找回密码", message="",
+                  html_message='尊敬的%s,您好!<br><br>您在荏苒网申请了找回密码, 请点击<a href="%s" target="_blank">重置密码</a>进行密码修改操作.<br><br>如果不是您本人的操作,请忽略本次邮件!' % (
+                      user.username, url), from_email=settings.EMAIL_FROM, recipient_list=[email])
+
+        # 异步发送邮件
+        # send_email.delay([email],url)
+
+        return Response({"detail": "ok"})
+
+
+class CheckTokenAPIView(APIView):
+    """验证token"""
+
+    def get(self, request):
+        token_string = request.query_params.get('token')
+        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, expires_in=settings.EMAIL_EXPIRE_TIME)
+        try:
+            token = serializer.loads(token_string)
+        except BadData:
+            return Response({"detail": "对不起,当前链接地址不存在或者已过期!"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"email": token.get('email')})
+
+
+class ResetPasswordAPIView(APIView):
+    """重设密码"""
+
+    def put(self, request):
+        token_string = request.query_params.get('email')
+        serializer = TimedJSONWebSignatureSerializer(settings.SECRET_KEY, expires_in=settings.EMAIL_EXPIRE_TIME)
+
+        try:
+            token = serializer.loads(token_string)
+        except BadData:
+            return Response({"detail": "对不起,当前链接地址不存在或者已过期!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 客户端传入的待修改的密码
+        password = request.data.get('password')
+        password2 = request.data.get('password2')
+
+        if password != password2:
+            return Response({"detail": "对不起！您两次输入的密码不一致"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 获取用户对象，修改密码并保存
+        user = User.objects.get(email=token.get('email'))
+        user.set_password(password)
+        user.save()
+
+        return Response({"detail": "密码修改成功！"})
