@@ -3,7 +3,7 @@ from django.db.models import Q
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.utils import jwt_payload_handler as payload_handler
 
-from renranapi.apps.users.models import User
+from users.models import User
 
 
 def get_user_by_account(account):
