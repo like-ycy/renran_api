@@ -2,8 +2,8 @@ from django.conf import settings
 from django.utils import timezone as datetime
 from rest_framework.generics import ListAPIView
 
-from .models import Banner
-from .serializers import BannerModelSerializer
+from .models import Banner, Nav
+from .serializers import BannerModelSerializer, NavModelSerializer
 
 
 class BannerListAPIView(ListAPIView):
@@ -15,3 +15,15 @@ class BannerListAPIView(ListAPIView):
         return Banner.objects.filter(is_show=True, is_deleted=False, start_time__lte=datetime.now(),
                                      end_time__gte=datetime.now()).order_by('orders', 'id')[
                :settings.HOME_BANNER_LENGTH]
+
+
+class HeaderNavListAPIView(ListAPIView):
+    queryset = Nav.objects.filter(is_show=True, pid=None, is_deleted=False, position=1).order_by("orders", "id")[
+               :settings.HEADER_NAV_LENGTH]
+    serializer_class = NavModelSerializer
+
+
+class FooterNavListAPIView(ListAPIView):
+    queryset = Nav.objects.filter(is_show=True, pid=None, is_deleted=False, position=2).order_by("orders", "id")[
+               :settings.FOOTER_NAV_LENGTH]
+    serializer_class = NavModelSerializer
