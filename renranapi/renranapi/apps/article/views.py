@@ -27,7 +27,7 @@ class CollectionAPIView(ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIVie
         instance.save()
 
 
-class ArticleAPIView(ListAPIView):
+class ArticleAPIView(ListAPIView, CreateAPIView):
     """文章视图"""
     permission_classes = [IsAuthenticated]
     serializer_class = ArticleModelSerializer

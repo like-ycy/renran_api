@@ -1,3 +1,4 @@
+from django.utils import timezone as datetime
 from rest_framework import serializers
 
 from .models import ArticleCollection, Article
@@ -45,3 +46,15 @@ class ArticleModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
         fields = ["id", "title", "content", "html_content", "is_public", "pub_date", "insert"]
+
+    def create(self, validated_data):
+        collection_id = int(self.context["view"].kwargs.get("collection"))
+        instance = Article.objects.create(
+            title=datetime.now().strftime("%Y-%m-%d"),
+            collection_id=collection_id,
+            user=self.context['request'].user
+        )
+        if not validated_data.get('insert'):
+            instance.orders = 0 - instance.id
+            instance.save()
+        return instance
