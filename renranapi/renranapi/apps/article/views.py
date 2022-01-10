@@ -1,13 +1,13 @@
 from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 
-from .models import ArticleCollection
-from .serializers import CollectionModelSerializer
+from .models import ArticleCollection, Article
+from .serializers import CollectionModelSerializer, ArticleModelSerializer
 
 
 class CollectionAPIView(ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView):
     """文集列表"""
-    permission_classes = (IsAuthenticated,)
+    permission_classes = [IsAuthenticated]
     serializer_class = CollectionModelSerializer
 
     def get_queryset(self):
@@ -25,3 +25,14 @@ class CollectionAPIView(ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIVie
         """逻辑删除"""
         instance.is_deleted = True
         instance.save()
+
+
+class ArticleAPIView(ListAPIView):
+    """文章视图"""
+    permission_classes = [IsAuthenticated]
+    serializer_class = ArticleModelSerializer
+
+    def get_queryset(self):
+        collection_id = self.kwargs.get('collection')
+        return Article.objects.filter(is_deleted=False, is_show=True, user=self.request.user,
+                                      collection_id=collection_id).order_by("orders", "id")

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import ArticleCollection
+from .models import ArticleCollection, Article
 
 
 class CollectionModelSerializer(serializers.ModelSerializer):
@@ -35,3 +35,13 @@ class CollectionModelSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get('name')
         instance.save()
         return instance
+
+
+class ArticleModelSerializer(serializers.ModelSerializer):
+    """文章序列化器"""
+    insert = serializers.BooleanField(write_only=True, required=False, default=True,
+                                      help_text="新增文章的排序位置: True表示开头,False表示末尾")
+
+    class Meta:
+        model = Article
+        fields = ["id", "title", "content", "html_content", "is_public", "pub_date", "insert"]
