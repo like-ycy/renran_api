@@ -30,3 +30,8 @@ class CollectionModelSerializer(serializers.ModelSerializer):
             return instance
         except:
             raise serializers.ValidationError('创建文集失败')
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name')
+        instance.save()
+        return instance

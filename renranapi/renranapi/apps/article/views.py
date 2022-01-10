@@ -1,11 +1,11 @@
-from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from .models import ArticleCollection
 from .serializers import CollectionModelSerializer
 
 
-class CollectionAPIView(ListAPIView, CreateAPIView, DestroyAPIView):
+class CollectionAPIView(ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView):
     """文集列表"""
     permission_classes = (IsAuthenticated,)
     serializer_class = CollectionModelSerializer
