@@ -1,11 +1,11 @@
-from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from .models import ArticleCollection
 from .serializers import CollectionModelSerializer
 
 
-class CollectionAPIView(ListAPIView, CreateAPIView):
+class CollectionAPIView(ListAPIView, CreateAPIView, DestroyAPIView):
     """文集列表"""
     permission_classes = (IsAuthenticated,)
     serializer_class = CollectionModelSerializer
@@ -20,3 +20,8 @@ class CollectionAPIView(ListAPIView, CreateAPIView):
             collection_list2 = ArticleCollection.objects.create(user=self.request.user, name='我的随笔', )
             collection_list = [collection_list1, collection_list2]
         return collection_list
+
+    def perform_destroy(self, instance):
+        """逻辑删除"""
+        instance.is_deleted = True
+        instance.save()
