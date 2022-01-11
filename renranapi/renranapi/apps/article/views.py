@@ -1,5 +1,7 @@
+from rest_framework import status
 from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from .models import ArticleCollection, Article
 from .serializers import CollectionModelSerializer, ArticleModelSerializer
@@ -36,3 +38,30 @@ class ArticleAPIView(ListAPIView, CreateAPIView):
         collection_id = self.kwargs.get('collection')
         return Article.objects.filter(is_deleted=False, is_show=True, user=self.request.user,
                                       collection_id=collection_id).order_by("orders", "id")
+
+    def patch(self):
+        """修改文章发布状态"""
+        try:
+            article = Article.objects.get(pk=pk, is_deleted=False, is_show=True, user=self.request.user)
+        except Article.DoesNotExist:
+            return Response({"detail": "当前文章不存在！"}, status=status.HTTP_400_BAD_REQUEST)
+        """
+        1. 隐私文章 is_public=False, pub_date=None
+        2. 发布文章 is_public=True, pub_date=None
+        3. 定时文章 is_public=False, pub_date=时间
+        """
+        if article.pub_date:
+            """取消定时发布文章"""
+            article.pub_date = None
+        elif article.is_public:
+            """把文章设置为隐私文章"""
+            article.is_public = False
+            # 取消推送Feed流
+            article.cancel_push_feed()
+        else:
+            """发布文章"""
+            article.is_public = True
+            # 推送feed流给粉丝
+            article.push_feed()
+        article.save()
+        return Response({"detail": "发布状态切换成功!"}, status=status.HTTP_200_OK)
