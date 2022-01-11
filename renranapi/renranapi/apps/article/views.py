@@ -39,7 +39,7 @@ class ArticleAPIView(ListAPIView, CreateAPIView):
         return Article.objects.filter(is_deleted=False, is_show=True, user=self.request.user,
                                       collection_id=collection_id).order_by("orders", "id")
 
-    def patch(self):
+    def patch(self, request, pk):
         """修改文章发布状态"""
         try:
             article = Article.objects.get(pk=pk, is_deleted=False, is_show=True, user=self.request.user)
