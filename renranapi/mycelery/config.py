@@ -1,14 +1,13 @@
+from celery.schedules import crontab
+from django.conf import settings
+
+from mycelery.main import app
+
 # 任务队列的链接地址
 # broker_url = '队伍队列软件类型://服务端地址:端口/仓库地址'
 broker_url = 'redis://dba:123.com@127.0.0.1:6379/15'
 # 结果队列的链接地址
 result_backend = 'redis://dba:123.com@127.0.0.1:6379/14'
-
-from celery.schedules import crontab
-# 和django框架同步时区
-from django.conf import settings
-
-from mycelery.main import app
 
 app.conf.timezone = settings.TIME_ZONE
 
