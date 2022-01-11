@@ -5,8 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import ArticleCollection, Article
-from .serializers import CollectionModelSerializer, ArticleModelSerializer
+from .models import ArticleCollection, Article, ArticleImage
+from .serializers import CollectionModelSerializer, ArticleModelSerializer, ArticleImageModelSerializer
 
 
 class CollectionAPIView(ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView):
@@ -122,3 +122,10 @@ class ArticleInfoAPIView(APIView):
         article.save()
 
         return Response({"detail": "编辑文章保存成功!"})
+
+
+class ArticleImageAPIView(CreateAPIView):
+    """文章图片上传视图"""
+    permission_classes = [IsAuthenticated]
+    serializer_class = ArticleImageModelSerializer
+    queryset = ArticleImage.objects.all()

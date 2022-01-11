@@ -1,7 +1,7 @@
 from django.utils import timezone as datetime
 from rest_framework import serializers
 
-from .models import ArticleCollection, Article
+from .models import ArticleCollection, Article, ArticleImage
 
 
 class CollectionModelSerializer(serializers.ModelSerializer):
@@ -57,4 +57,22 @@ class ArticleModelSerializer(serializers.ModelSerializer):
         if not validated_data.get('insert'):
             instance.orders = 0 - instance.id
             instance.save()
+        return instance
+
+
+class ArticleImageModelSerializer(serializers.ModelSerializer):
+    """文章图片序列化器"""
+
+    class Meta:
+        model = ArticleImage
+        fields = ["id", "article", "image"]
+
+    def create(self, validated_data):
+        instance = ArticleImage.objects.create(
+            image=validated_data.get('image'),
+            orders=0,
+            user=self.context['request'].user
+        )
+        instance.group = str(instance.image).split('/')[0]
+        instance.save()
         return instance
