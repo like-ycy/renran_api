@@ -65,3 +65,14 @@ class ArticleAPIView(ListAPIView, CreateAPIView):
             article.push_feed()
         article.save()
         return Response({"detail": "发布状态切换成功!"}, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        """修改文章所在文集"""
+        try:
+            article = Article.objects.get(pk=pk, is_deleted=False, is_show=True, user=self.request.user)
+        except Article.DoesNotExist:
+            return Response({"detail": "当前文章不存在！"}, status=status.HTTP_400_BAD_REQUEST)
+        collection_id = int(request.data.get('collection'))
+        article.collection_id = collection_id
+        article.save()
+        return Response({"detail": "移动文章成功!"}, status=status.HTTP_200_OK)
