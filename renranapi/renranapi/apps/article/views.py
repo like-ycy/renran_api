@@ -5,8 +5,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import ArticleCollection, Article, ArticleImage
+from .models import ArticleCollection, Article, ArticleImage, ArticleSpecial
 from .serializers import CollectionModelSerializer, ArticleModelSerializer, ArticleImageModelSerializer
+from .serializers import SpecialModelSerializer
 
 
 class CollectionAPIView(ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView):
@@ -129,3 +130,18 @@ class ArticleImageAPIView(CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ArticleImageModelSerializer
     queryset = ArticleImage.objects.all()
+
+
+class SpecialAPIView(ListAPIView):
+    """专题视图"""
+    permission_classes = [IsAuthenticated]
+    serializer_class = SpecialModelSerializer
+
+    def get_queryset(self):
+        article_id = self.request.query_params.get('article_id')
+        special_list = ArticleSpecial.objects.filter(is_show=True, is_deleted=False,
+                                                     mymanager__user=self.request.user).order_by("orders", "id")
+
+        for special in special_list:
+            special.post_status = special.check_post_stauts(article_id)
+        return special_list

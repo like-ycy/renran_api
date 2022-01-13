@@ -1,7 +1,7 @@
 from django.utils import timezone as datetime
 from rest_framework import serializers
 
-from .models import ArticleCollection, Article, ArticleImage
+from .models import ArticleCollection, Article, ArticleImage, ArticleSpecial
 
 
 class CollectionModelSerializer(serializers.ModelSerializer):
@@ -76,3 +76,12 @@ class ArticleImageModelSerializer(serializers.ModelSerializer):
         instance.group = str(instance.image).split('/')[0]
         instance.save()
         return instance
+
+
+class SpecialModelSerializer(serializers.ModelSerializer):
+    """专题序列化器"""
+    post_status = serializers.BooleanField(read_only=True, default=False, label="文章对于专题的发布状态")
+
+    class Meta:
+        model = ArticleSpecial
+        fields = ["id", "name", "image", "notice", "article_count", "follow_count", "post_status"]
