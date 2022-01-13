@@ -1,7 +1,7 @@
 from django.utils import timezone as datetime
 from rest_framework import serializers
 
-from .models import ArticleCollection, Article, ArticleImage, ArticleSpecial
+from .models import ArticleCollection, Article, ArticleImage, ArticleSpecial, User
 
 
 class CollectionModelSerializer(serializers.ModelSerializer):
@@ -9,7 +9,7 @@ class CollectionModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ArticleCollection
-        fields = ('id', 'name')
+        fields = ['id', 'name']
 
     def validate(self, attrs):
         """数据校验"""
@@ -85,3 +85,20 @@ class SpecialModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArticleSpecial
         fields = ["id", "name", "image", "notice", "article_count", "follow_count", "post_status"]
+
+
+class UserModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "nickname", "avatar"]
+
+
+class ArticleRetrieveModelSerializer(serializers.ModelSerializer):
+    """文章详情序列化器"""
+    user = UserModelSerializer()
+    collection = CollectionModelSerializer()
+
+    class Meta:
+        model = Article
+        fields = ["id", "title", "html_content", "user", "collection", "read_count", "like_count", "collect_count",
+                  "comment_count", "reward_count", "created_time"]

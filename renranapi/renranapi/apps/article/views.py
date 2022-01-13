@@ -1,6 +1,6 @@
 from django.utils import timezone as datetime
 from rest_framework import status
-from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from .models import ArticleCollection, Article, ArticleImage, ArticleSpecial
 from .models import ArticlePostSpecial
 from .serializers import CollectionModelSerializer, ArticleModelSerializer, ArticleImageModelSerializer
-from .serializers import SpecialModelSerializer
+from .serializers import SpecialModelSerializer, ArticleRetrieveModelSerializer
 
 
 class CollectionAPIView(ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView):
@@ -192,3 +192,9 @@ class ArticlePostAPIView(APIView):
             pass
 
         return Response({"detail": "文章投稿成功!"}, status=status.HTTP_200_OK)
+
+
+class ArticleRetrieveAPIView(RetrieveAPIView):
+    """文章详情"""
+    queryset = Article.objects.filter(is_deleted=False, is_show=True, is_public=True)
+    serializer_class = ArticleRetrieveModelSerializer
