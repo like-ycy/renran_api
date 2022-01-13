@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import ArticleCollection, Article, ArticleImage, ArticleSpecial
+from .models import ArticlePostSpecial
 from .serializers import CollectionModelSerializer, ArticleModelSerializer, ArticleImageModelSerializer
 from .serializers import SpecialModelSerializer
 
@@ -145,3 +146,49 @@ class SpecialAPIView(ListAPIView):
         for special in special_list:
             special.post_status = special.check_post_stauts(article_id)
         return special_list
+
+
+class ArticlePostAPIView(APIView):
+    """文章投稿"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """文章投稿到专题"""
+        # 文章id和专题id
+        article_id = request.data.get('article_id')
+        special_id = request.data.get('special_id')
+
+        try:
+            article = Article.objects.get(pk=article_id, is_deleted=False, is_show=True, user=self.request.user)
+        except Article.DoesNotExist:
+            return Response({"detail": "当前文章不存在!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            special = ArticleSpecial.objects.get(pk=special_id, is_deleted=False, is_show=True)
+        except ArticleSpecial.DoesNotExist:
+            return Response({"detail": "当前专题不存在!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 判断文章是否已经投稿或者在审核中了
+        try:
+            ArticlePostSpecial.objects.get(article=article, special=special, status__in=[0, 1, 2])
+            return Response({"detail": "当前文章已经在投稿中或已被收录，请不要频繁点击投稿!"}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            pass
+
+        # 新增投稿记录
+        postlog = ArticlePostSpecial.objects.create(
+            article=article,
+            special=special,
+            status=0,
+            post_time=datetime.now()
+        )
+
+        # 判断当前用户是否是专题的管理员，如果是，则直接默认通过
+        try:
+            postlog.special.mymanager.get(user=request.user)
+            postlog.status = 2
+            postlog.save()
+        except:
+            pass
+
+        return Response({"detail": "文章投稿成功!"}, status=status.HTTP_200_OK)
