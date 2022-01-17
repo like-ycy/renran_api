@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from article.models import Article
+from article.serializers import UserModelSerializer
 from .models import Banner, Nav
 
 
@@ -19,3 +21,12 @@ class NavModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Nav
         fields = ["name", "icon", "link", "is_http", "son_list"]
+
+
+class ArticleModelSerializer(serializers.ModelSerializer):
+    user = UserModelSerializer()
+
+    class Meta:
+        model = Article
+        fields = ["id", "title", "html_content", "user", "pub_date", "read_count", "like_count", "collect_count",
+                  "comment_count", "reward_count", ]
