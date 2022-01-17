@@ -1,4 +1,5 @@
 from django.urls import path, re_path
+from rest_framework.routers import SimpleRouter
 
 from . import views
 
@@ -13,4 +14,9 @@ urlpatterns = [
     path("special/", views.SpecialAPIView.as_view()),
     path("post/", views.ArticlePostAPIView.as_view()),
     re_path("^(?P<pk>\d+)/retrieve/$", views.ArticleRetrieveAPIView.as_view()),
+    path("focus/", views.FocusAPIView.as_view()),
 ]
+
+router = SimpleRouter()
+router.register("log", views.UserArticleAPIView, basename="log")
+urlpatterns += router.urls
